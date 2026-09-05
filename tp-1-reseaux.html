@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Introduction - TP Reseaux</title>
+        <title>TP 1 Reseaux - TP Reseaux</title>
 
 
         <!-- Custom HTML head -->
@@ -174,24 +174,130 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="introduction"><a class="header" href="#introduction">Introduction</a></h1>
-<p>Ce site web est destiné à accueillir quelques TP de Reseaux pour des étudiants de niveau BTS.</p>
-<p>Dans les TP on aborde les notions suivantes :</p>
+                        <h1 id="tp-1-reseaux"><a class="header" href="#tp-1-reseaux">TP 1 Reseaux</a></h1>
+<h2 id="introduction"><a class="header" href="#introduction">Introduction</a></h2>
+<p>Dans ce TP de 2h nous allons monter un cluster de machines en utilisant le systeme <a href="https://proxmox.com/">proxmox VE</a>, système d’exploitation (abrégé OS dans le reste du TP) basé sur debian. Proxmox permet de gérer des machines virtuelles et des conteneurs dans un cluster de machines. Par rapport au reseau local notre cluster se comportera comme un sous reseau classique. Nous détaillerons les particularités de proxmox le moment venu.</p>
+<p>Pour ce TP vous avez à votre disposition le matériel suivant :</p>
 <ul>
-<li>Configuration IP</li>
-<li>Configuration d’interfaces</li>
-<li>Diagnostic trivial de problèmes de connexions</li>
-<li>Types d’équipements reseaux</li>
-<li>Creation d’un cluster de 5 noeuds avec Proxmox</li>
+<li>3 mini-pc (PC) et 1 cable ethernet pour chaque</li>
+<li>1 machine ‘reseau’ (ROUTER) qui possède 5 ports ethernet: 3 en RJ45 et 2 en SPF &lt;détailler&gt;</li>
+<li>1 switch et son cable SPF pour le uplink</li>
+<li>1 petit écran et son cable hdmi</li>
+<li>1 clavier et souris à dongle</li>
+<li>1 alimentation par appareil (6 en tout)</li>
+<li>1 clé USB contenant l’installer de proxmox</li>
 </ul>
-<p>La mise en page de ce site est réalisée à partir du template de wiki <a href="https://github.com/rust-lang/mdBook">mdbook</a>.</p>
+<p>Le routeur est désigné dans notre configuration pour
+L’écran et le clavier doivent vous servir à consulter l’état des mini-pc une fois démarrés. Dans une configuration réelle, sauf cas particulier, on configurerais le service ssh pour pouvoir accéder aux machines sans devoir brancher/débrancher sans arrêt des périphériques sur les machines.</p>
+<blockquote class="blockquote-tag blockquote-tag-caution">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M4.47.22A.749.749 0 0 1 5 0h6c.199 0 .389.079.53.22l4.25 4.25c.141.14.22.331.22.53v6a.749.749 0 0 1-.22.53l-4.25 4.25A.749.749 0 0 1 11 16H5a.749.749 0 0 1-.53-.22L.22 11.53A.749.749 0 0 1 0 11V5c0-.199.079-.389.22-.53Zm.84 1.28L1.5 5.31v5.38l3.81 3.81h5.38l3.81-3.81V5.31L10.69 1.5ZM8 4a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0v-3.5A.75.75 0 0 1 8 4Zm0 8a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Caution</p>
+<p>Il va sans dire que l’on compte bien retrouver l’ensemble du matériel prêté à la fin du TP sinon quoi vous vous exposez à des sanctions</p>
+</blockquote>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>La durée donnée à coté du titre de chaque  exercice est donné à titre informatif</p>
+</blockquote>
+<h2 id="exercice-1-30-minutes"><a class="header" href="#exercice-1-30-minutes">Exercice 1 (30 minutes)</a></h2>
+<h3 id="a-dessiner-reseau-av-convention-de-nommage-10-15min"><a class="header" href="#a-dessiner-reseau-av-convention-de-nommage-10-15min">A) dessiner reseau av. convention de nommage (10-15min)</a></h3>
+<h3 id="b-installer-proxmox-sur-le-routeur-15-minutes"><a class="header" href="#b-installer-proxmox-sur-le-routeur-15-minutes">B) Installer proxmox sur le routeur (15 minutes)</a></h3>
+<p>Vous devez d’abord insérer la clé USB dans la machine routeur, brancher les cables (alimentation, hdmi) puis allumer la machine. À partir de la 2 possibilités existent, soit :</p>
+<ol>
+<li>La machine démarre directement sur la clé. Pas de problème vous pouvez continuer l’installation.</li>
+<li>La machine démarre sur l’OS précédemment installé (a priori proxmox). Nous souhaitons réinstaller systématiquement l’OS pour ce TP. Auquel cas il vous faudra éteindre la machine puis accéder à l’UEFI<sup class="footnote-reference" id="fr-1-1"><a href="#footnote-1">1</a></sup> pour démarrer en partant de la clé. Pour accéder à l’UEFI, il faut, juste après le redémarrage de la machine, appuyer sur une touche ‘spéciale’ du clavier pour y accéder. En général il s’agit d’Échap ou une combinaison de touche Fonction. Dans notre cas il s’agit de la touche Suppr.</li>
+</ol>
+<blockquote class="blockquote-tag blockquote-tag-note">
+<p class="blockquote-tag-title"><svg viewbox="0 0 16 16" width="18" height="18"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"></path></svg>Note</p>
+<p>On note qu’avant l’UEFI il existait un microprogramme appelé BIOS qui accomplissait les même tâches. Les deux termes sont parfois utilisés de manière interchangeable.</p>
+</blockquote>
+<ol start="3">
+<li>Sur l’écran de démarrage choississez “Install Proxmox with Terminal UI” (la fenêtre d’installation graphique ne rentre pas dans le petit écran)</li>
+<li>Acceptez les conditions d’utilisation, choississez la région et la disposition clavier (!). On vous demande ensuite de choisir un mot de passe pour l’utilisateur root du système. Dans ce TP nous irons à l’encontre de toute recommandation en matière de cybersécurité en vous recommandant de choisir un mot de passe très simple et identique pour chaque machine. (Votre enseignant n’aimerais pas à avoir réinitialiser votre mot de passe). Pour le mail vous pouvez mettre n’importe quoi au format mail (<code>a@b.c</code>). À notez que si vous montez un jour votre propre serveur vous devriez mettre un mail où vous êtes joignable…</li>
+<li>Entrez le nom de domaine et l’IP. Pour des raison de praticité nous avons déjà choisi les noms de domaines des machines qui seront :</li>
+</ol>
+<ul>
+<li><code>router.home</code> pour la machine ‘ROUTER’</li>
+<li><code>PC1.home</code>, <code>PC2.home</code> ou <code>PC3.home</code> pour les mini-pc (voir l’étiquette dessus)</li>
+<li>Dans <code>IP address</code> renseignez l’IP que vous avez choisi dans la premiere partie. &lt;Comme nous avons crée un sous réseau vous devez aussi changer l’adresse de la passerelle et du serveur DNS.&gt;</li>
+</ul>
+<ol start="6">
+<li>Passez à l’écran suivant et selectionnez ‘Install’. Il faudra retirer la clé entre le moment ou vous selectionnez Install et celui où la machine redémarre, sinon vous redémarrerez sur l’installer proxmox au lieu du système !</li>
+<li>Attendez que le système démarre. Une fois sur l’écran de login. (Écran disponible ici seulement en console, on dit aussi CLI<sup class="footnote-reference" id="fr-2-1"><a href="#footnote-2">2</a></sup>). Au dessus vous devriez voir un lien du type : <code>https://&lt;VOTRE_IP&gt;:8006</code>. Il s’agit de l’adresse de l’interface web de proxmox. Nous allons continuer les manipulations dessus.</li>
+</ol>
+<h2 id="exercice-2-10-minutes"><a class="header" href="#exercice-2-10-minutes">Exercice 2 (10 minutes)</a></h2>
+<p>Comme vu précédement, nous allons créer un cluster de machines. Toutes les machines que nous allons relier au cluster feront parti du même sous réseau. Pour faciliter la gestion du réseau global (WAN<sup class="footnote-reference" id="fr-3-1"><a href="#footnote-3">3</a></sup>) au niveau du routeur, nous allons créer un <em>pont</em>, ou <em>bridge</em><sup class="footnote-reference" id="fr-4-1"><a href="#footnote-4">4</a></sup>.</p>
+<p>Connectez vous à l’interface web de proxmox sur le routeur avec l’identifiant <code>root</code> et le mot de passe que vous avez fourni à l’installation. Une fois que c’est fait, allez dans l’onglet <strong>Datacenter → router → System → Network</strong>. Cliquez sur <strong>Create → Linux Bridge</strong>. On vous demande de remplir un formulaire : Dans le champ <code>Name</code> mettez <code>vmbr1</code> (<code>vmbrX</code> étant la convention de nommage des bridges). Dans le champ <code>Bridge ports</code> mettez l’interface à laquelle le switch sera relié. On choisira ici une des deux interfaces SFP (nommées nic3 ou nic4).</p>
+<p>Cliquez sur <strong>Create</strong>, puis sur <strong>Apply Configuration</strong> en haut de la fenêtre du network. Votre pont est crée !</p>
+<p>Pour assurer que les machines du sous réseau puissent acceder à internet nous allons configurer l’IP forwarding sur la machine proxmox. Cliquez sur le noeud <code>router</code> puis dans l’onglet <code>Shell</code> du panneau qui s’est ouvert.</p>
+<p>Nous vous proposons deux méthodes pour obtenir l’IP forwarding, l’une est temporaire et l’autre permanente. Les voici:</p>
+<ol>
+<li>Temporaire: Entrez la commande <code>sudo sysctl -w net.ipv4.ip_forward=1</code></li>
+<li>Permanent: Éditez le fichier <code>/etc/sysctl.conf</code> (avec nano ou vi par exemple) pour y ajouter la ligne <code>net.ipv4.ip_forward=1</code></li>
+</ol>
+<h2 id="exercice-3-30-minutes"><a class="header" href="#exercice-3-30-minutes">Exercice 3 (30 minutes)</a></h2>
+<p>On passe à la création du cluster proprement dit.</p>
+<ul>
+<li>relier chaque PC au sous reseau puis cluster (10min par PC)
+<ul>
+<li>installer proxmox
+<ul>
+<li>brancher ethernet sur routeur</li>
+<li>shell router ip link set if up</li>
+<li>verifier avec ip a</li>
+<li>add adresse statique</li>
+<li>debrancher/rebrancher PC sur switch</li>
+<li>sur PC lancer tcpdump -i itf icmp (possibilité ecoute tcp/udp etc)</li>
+<li>ping le PC avec l’ip attribuée et observer la reception des pings</li>
+</ul>
+</li>
+<li>join cluster
+<ul>
+<li>cliquer sur datacenter &gt; cluster &gt; join information</li>
+<li>cliquer sur copy information (pas besoin de ctrl+c/v)</li>
+<li>se connecter au node en web
+<ul>
+<li>brancher cable</li>
+<li>ip link set / ip addr add de chaque coté</li>
+<li>mettre 2 ip diff !!!!</li>
+</ul>
+</li>
+<li>datacenter &gt; cluster &gt; join cluster &gt; coller le contenu du presse papier</li>
+<li>attendre le message “task done”, sinon verifier que vos ip sont bien config (l’ip copiée n’est pas dans le reseau du node mais proxmox devrais chercher dans le reseau disponible et trouver quand meme)</li>
+<li>repeter pour les 3 autres machines (1 eleve par manip)</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="glossaire"><a class="header" href="#glossaire">Glossaire</a></h2>
+<hr>
+<ol class="footnote-definition">
+<li id="footnote-1">
+<p>UEFI
+: <em>Unified Extensible Firmware Interface</em> : le logiciel de bas niveau qui fait le lien entre les composants matériels d’un ordinateur et son système d’exploitation lors du démarrage <a href="#fr-1-1">↩</a></p>
+</li>
+<li id="footnote-2">
+<p>CLI
+: <em>Command Line Interface</em> : l’outil textuel qui permet de contrôler un ordinateur ou un logiciel en tapant des commandes au clavier, au lieu de cliquer avec une souris. C’est un héritage des tout premiers ordinateurs qui n’avaient souvent pas d’écran mais une imprimante. <a href="#fr-2-1">↩</a></p>
+</li>
+<li id="footnote-3">
+<p>WAN
+: <em>Wide Area Network</em> : le réseau informatique qui relie des ordinateurs et des réseaux locaux (LAN) sur une grande zone géographique, comme un pays ou le monde entier. <a href="#fr-3-1">↩</a></p>
+</li>
+<li id="footnote-4">
+<p>Pont réseau
+: Un <em>pont réseau</em> (ou <em>network bridge</em>) est un équipement ou une fonction logicielle de la couche 2 (liaison de données) du modèle OSI qui relie deux segments de réseau local pour les faire communiquer comme un seul et même réseau. <a href="#fr-4-1">↩</a></p>
+</li>
+</ol>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="index.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
 
-                            <a rel="next prefetch" href="tp-1-reseaux.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="annexes/index.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -201,8 +307,11 @@
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="index.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
 
-                    <a rel="next prefetch" href="tp-1-reseaux.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="annexes/index.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>
